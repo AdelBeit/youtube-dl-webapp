@@ -1,31 +1,31 @@
 'use strict';
 const fs = require('fs');
 const dl = require('ytdl-core');
+const koa = require('koa');
+const app = new koa();
 
-// dl('http://www.youtube.com/watch?v=A02s8omM_hI')
-//   .pipe(fs.createWriteStream('video.flv'));
-
-const videourl = "http://www.youtube.com/watch?v=A02s8omM_hI";
+let videourl = "http://www.youtube.com/watch?v=A02s8omM_hI";
+videourl = "https://www.youtube.com/watch?v=EzKImzjwGyM";
 
 
-dl.getInfo(videourl, { filter: format => true }).then(info => {
-     let wstream = fs.createWriteStream('formats.json');
-     let i = info.player_response.streamingData;
-     // let mimes = {}
-     // for(let k in i.formats){
-     //      console.log(i.formats[k].mimeType);
-     //      mimes[k] = i.formats[k].mimeType;
-     // }
-     // for(let k in i.adaptiveFormats){
-     //      console.log(i.adaptiveFormats[k].mimeType);
-     //      mimes[k*4] = i.adaptiveFormats[k].mimeType;
-     // }
-     wstream.write(JSON.stringify(i));
-     wstream.end();
+
+app.use(async (ctx, next) => {
+     try{
+          await next();
+          dl(videourl, {quality: 'highest'}).then(str => {
+               str.pipe(fs.createWriteStream('video.mp4')).then(() => {
+               ctx.body+= 'finished downloading';
+          }).catch((err) => {if(err) throw err});
+          ctx.body = 'Hello Wrold'; 
+     } catch(err) {
+          ctx.status = err.status || 500;
+          ctx.body = err.message;
+          ctx.app.emit('error', err, ctx);
+     }
 });
 
-// const koa = require('koa');
-// const app = new koa();
+app.on('error', (err, ctx) => {
+     console.log(err);
+});
 
-// app.use(async ctx => {ctx.body = 'Hello Wrold'; });
-// app.listen(3000);
+app.listen(3000);

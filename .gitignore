@@ -5,6 +5,10 @@
 **/.pnp
 .pnp.js
 
+# test files
+**/*.mp4
+
+
 # testing
 **/coverage
 
